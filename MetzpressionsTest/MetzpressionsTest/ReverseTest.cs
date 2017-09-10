@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace MetzpressionsTest
 {
     [TestClass]
-    public class UnitTest1
+    public class ReverseTest
     {
         [TestMethod]
         public void LikeTerms()
