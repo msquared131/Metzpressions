@@ -2,7 +2,7 @@
 
 namespace Metzpressions
 {
-    public static class ModifyExpressioncs
+    public static class ModifyExpressions
     {
         public static Expression ReverseLambda(LambdaExpression exp)
         {
