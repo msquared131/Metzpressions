@@ -80,11 +80,6 @@ namespace Metzpressions
             ExpressionNotEvaluating = Expression.MakeBinary(newType, ExpressionNotEvaluating, expressionToMove);
             return expressionToStay;
         }
-
-        private void CombineLikeTerms()
-        {
-
-        }
     }
 }
 
