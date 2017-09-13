@@ -14,9 +14,10 @@ namespace Metzpressions
             LeftSide = exp.Parameters[0];
             RightSide = exp.Body;
             var parameters = exp.Parameters;
-
             do
             {
+                LeftSide = ModifyExpressions.CombineTerms(LeftSide);
+                RightSide = ModifyExpressions.CombineTerms(RightSide);
                 if (LeftSide.NodeType == ExpressionType.Constant ||
                     LeftSide.NodeType == ExpressionType.Parameter)
                 {
@@ -79,11 +80,6 @@ namespace Metzpressions
             }
             ExpressionNotEvaluating = Expression.MakeBinary(newType, ExpressionNotEvaluating, expressionToMove);
             return expressionToStay;
-        }
-
-        private void CombineLikeTerms()
-        {
-
         }
     }
 }
