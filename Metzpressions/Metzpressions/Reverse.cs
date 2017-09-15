@@ -18,6 +18,15 @@ namespace Metzpressions
             {
                 LeftSide = ModifyExpressions.CombineTerms(LeftSide);
                 RightSide = ModifyExpressions.CombineTerms(RightSide);
+                if (LeftSide.Equals(parameters[0]))
+                {
+                    return Expression.Lambda(RightSide, parameters);
+                }
+                else if (RightSide.Equals(parameters[0]))
+                {
+                    return Expression.Lambda(LeftSide, parameters);
+                }
+
                 if (LeftSide.NodeType == ExpressionType.Constant ||
                     LeftSide.NodeType == ExpressionType.Parameter)
                 {
@@ -42,10 +51,9 @@ namespace Metzpressions
 
         protected override Expression VisitBinary(BinaryExpression b)
         {
-
             ExpressionType newType;
-            Expression expressionToMove;
-            Expression expressionToStay;
+            Expression expressionToMove = b.Right;
+            Expression expressionToStay = b.Left;
             switch (b.NodeType)
             {
                 case ExpressionType.Add:
@@ -60,24 +68,27 @@ namespace Metzpressions
                 case ExpressionType.Divide:
                     newType = ExpressionType.Multiply;
                     break;
+                case ExpressionType.Power:
+                    newType = ExpressionType.Power;
+                    break;
                 default:
                     newType = b.NodeType;
                     break;
             }
 
-            if ((b.Left.NodeType == ExpressionType.Constant ||
-                 (b.Left.NodeType == ExpressionType.Parameter &&
-                  b.Right.NodeType != ExpressionType.Constant)) &&
-                b.NodeType != ExpressionType.Divide)
+            if (b.NodeType == ExpressionType.Power)
+            {
+                expressionToMove = Expression.MakeBinary(ExpressionType.Divide, Expression.Constant(1d), b.Right);
+            }
+            else if ((b.Left.NodeType == ExpressionType.Constant ||
+                      (b.Left.NodeType == ExpressionType.Parameter &&
+                       b.Right.NodeType != ExpressionType.Constant)) &&
+                     b.NodeType != ExpressionType.Divide)
             {
                 expressionToMove = b.Left;
                 expressionToStay = b.Right;
             }
-            else
-            {
-                expressionToMove = b.Right;
-                expressionToStay = b.Left;
-            }
+
             ExpressionNotEvaluating = Expression.MakeBinary(newType, ExpressionNotEvaluating, expressionToMove);
             return expressionToStay;
         }

@@ -22,7 +22,7 @@ namespace Metzpressions
                         return Expression.MakeBinary(ExpressionType.Multiply, Expression.Constant((decimal)GetConstant(b.Left).Value - (decimal)GetConstant(b.Right).Value), GetParameter(b.Left));
                     case ExpressionType.Multiply:
                         var left = Expression.Constant((decimal)GetConstant(b.Left).Value * (decimal)GetConstant(b.Right).Value);
-                        var right = Expression.MakeBinary(ExpressionType.Multiply, GetParameter(b.Left), GetParameter(b.Right));
+                        var right = Expression.MakeBinary(ExpressionType.Power, GetParameter(b.Left), GetParameter(b.Right));
                         return Expression.MakeBinary(ExpressionType.Multiply, left, right);
                     case ExpressionType.Divide:
                         return Expression.Constant((decimal)GetConstant(b.Left).Value / (decimal)GetConstant(b.Right).Value);
@@ -55,7 +55,7 @@ namespace Metzpressions
                 return (ParameterExpression)exp;
             }
             return null;
-        }
+        }        
 
         private ConstantExpression GetConstant(Expression exp)
         {
