@@ -37,12 +37,22 @@ namespace MetzpressionsTest
         }
 
         [TestMethod]
-        public void Power()
+        public void xSquared()
         {
             var parameter = Expression.Parameter(typeof(double), "x");            
             var exp = Expression.MakeBinary(ExpressionType.Power, parameter, Expression.Constant(2d));
             var lamda = Expression.Lambda(exp, parameter);
             TestDoubleExpression((Expression<Func<double, double>>)lamda);            
+        }
+
+        [TestMethod]
+        public void xSquaredTimesxSquared()
+        {
+            var parameter = Expression.Parameter(typeof(double), "x");            
+            var xSquared = Expression.MakeBinary(ExpressionType.Power, parameter, Expression.Constant(2d));
+            var exp = Expression.MakeBinary(ExpressionType.Multiply, xSquared, xSquared);
+            var lamda = Expression.Lambda(exp, parameter);
+            TestDoubleExpression((Expression<Func<double, double>>)lamda);
         }
 
         [TestMethod]
@@ -57,21 +67,7 @@ namespace MetzpressionsTest
         {
             Expression<Func<decimal, decimal>> exp = (input) => input - input * 3;
             TestDecimalExpression(exp);
-        }
-
-        [TestMethod]
-        public void DivideLikeTerms()
-        {
-            Expression<Func<decimal, decimal>> exp = (input) => input / (input * 3);
-            TestDecimalExpression(exp);
-        }
-
-        [TestMethod]
-        public void MultiplyLikeTerms()
-        {
-            Expression<Func<decimal, decimal>> exp = (input) => input * (input * 3);
-            TestDecimalExpression(exp);
-        }             
+        }          
 
         private static void TestDecimalExpression(Expression<Func<decimal, decimal>> exp)
         {

@@ -18,15 +18,6 @@ namespace Metzpressions
             {
                 LeftSide = ModifyExpressions.CombineTerms(LeftSide);
                 RightSide = ModifyExpressions.CombineTerms(RightSide);
-                if (LeftSide.Equals(parameters[0]))
-                {
-                    return Expression.Lambda(RightSide, parameters);
-                }
-                else if (RightSide.Equals(parameters[0]))
-                {
-                    return Expression.Lambda(LeftSide, parameters);
-                }
-
                 if (LeftSide.NodeType == ExpressionType.Constant ||
                     LeftSide.NodeType == ExpressionType.Parameter)
                 {

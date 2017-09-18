@@ -1,31 +1,37 @@
 ﻿using System.Linq.Expressions;
+using System.Collections.Generic;
 
 namespace Metzpressions
 {
     internal class CombineTerms : ExpressionVisitor
-    {
+    {       
+
         public Expression Modify(Expression exp)
         {
             return Visit(exp);
         }
 
         protected override Expression VisitBinary(BinaryExpression b)
-        {       
+        {
 
             if (CanCombine(b.Left, b.Right))
             {
+                Expression left;
+                Expression right;
                 switch (b.NodeType)
                 {
                     case ExpressionType.Add:
-                        return Expression.MakeBinary(ExpressionType.Multiply, Expression.Constant((decimal)GetConstant(b.Left).Value + (decimal)GetConstant(b.Right).Value), GetParameter(b.Left));
+                        return Expression.MakeBinary(ExpressionType.Multiply, Expression.Constant((double)GetConstant(b.Left).Value + (double)GetConstant(b.Right).Value), GetParameter(b.Left));
                     case ExpressionType.Subtract:
-                        return Expression.MakeBinary(ExpressionType.Multiply, Expression.Constant((decimal)GetConstant(b.Left).Value - (decimal)GetConstant(b.Right).Value), GetParameter(b.Left));
+                        return Expression.MakeBinary(ExpressionType.Multiply, Expression.Constant((double)GetConstant(b.Left).Value - (double)GetConstant(b.Right).Value), GetParameter(b.Left));
                     case ExpressionType.Multiply:
-                        var left = Expression.Constant((decimal)GetConstant(b.Left).Value * (decimal)GetConstant(b.Right).Value);
-                        var right = Expression.MakeBinary(ExpressionType.Power, GetParameter(b.Left), GetParameter(b.Right));
+                        left = Expression.Constant((double)GetConstant(b.Left).Value * (double)GetConstant(b.Right).Value);
+                        right = Expression.MakeBinary(ExpressionType.Power, GetParameter(b.Left), Expression.MakeBinary(ExpressionType.Add, GetExponent(b.Left), GetExponent(b.Right)));
                         return Expression.MakeBinary(ExpressionType.Multiply, left, right);
                     case ExpressionType.Divide:
-                        return Expression.Constant((decimal)GetConstant(b.Left).Value / (decimal)GetConstant(b.Right).Value);
+                        left = Expression.Constant((double)GetConstant(b.Left).Value / (double)GetConstant(b.Right).Value);
+                        right = Expression.MakeBinary(ExpressionType.Power, GetParameter(b.Left), Expression.MakeBinary(ExpressionType.Subtract, GetExponent(b.Left), GetExponent(b.Right)));
+                        return Expression.MakeBinary(ExpressionType.Multiply, left, right);
                 }
             }
             return b;
@@ -33,49 +39,67 @@ namespace Metzpressions
 
         private bool CanCombine(Expression left, Expression right)
         {
-            return (GetParameter(left) == GetParameter(right));
+            return (GetParameter(left) != null &&
+                    GetParameter(left) == GetParameter(right));
         }
 
         private ParameterExpression GetParameter(Expression exp)
         {
-            if(exp.NodeType == ExpressionType.Multiply)
+            List<ExpressionType> binaryTypes = new List<ExpressionType> { ExpressionType.Multiply, ExpressionType.Divide, ExpressionType.Add, ExpressionType.Subtract, ExpressionType.Power };
+            if (binaryTypes.Contains(exp.NodeType))
             {
                 var binary = (BinaryExpression)exp;
-                if(binary.Left.NodeType == ExpressionType.Parameter)
-                {
-                    return (ParameterExpression)binary.Left;
-                }
-                if (binary.Right.NodeType == ExpressionType.Parameter)
-                {
-                    return (ParameterExpression)binary.Right;
-                }
-            }
-            if(exp.NodeType == ExpressionType.Parameter)
-            {
-                return (ParameterExpression)exp;
-            }
-            return null;
-        }        
+                var left = GetParameter(binary.Left);
+                var right = GetParameter(binary.Right);
 
-        private ConstantExpression GetConstant(Expression exp)
-        {
-            if(exp.NodeType == ExpressionType.Multiply)
-            {
-                var binary = (BinaryExpression)exp;
-                if (binary.Left.NodeType == ExpressionType.Constant)
+                if (left.NodeType == ExpressionType.Parameter)
                 {
-                    return (ConstantExpression)binary.Left;
+                    return left;
                 }
-                if (binary.Right.NodeType == ExpressionType.Constant)
+                if (right.NodeType == ExpressionType.Parameter)
                 {
-                    return (ConstantExpression)binary.Right;
+                    return right;
                 }
             }
             if (exp.NodeType == ExpressionType.Parameter)
             {
-                return Expression.Constant(1m);
+                return (ParameterExpression)exp;
             }
             return null;
-        }        
+        }
+
+        private Expression GetExponent(Expression exp)
+        {
+            if (exp.NodeType == ExpressionType.Power)
+            {
+                return ((BinaryExpression)exp).Right;
+            }
+            return null;
+        }
+
+        private ConstantExpression GetConstant(Expression exp)
+        {
+            List<ExpressionType> binaryTypes = new List<ExpressionType> { ExpressionType.Multiply, ExpressionType.Divide, ExpressionType.Add, ExpressionType.Subtract, ExpressionType.Power };
+            if (binaryTypes.Contains(exp.NodeType))
+            {
+                var binary = (BinaryExpression)exp;
+                var left = GetConstant(binary.Left);
+                var right = GetConstant(binary.Right);
+
+                if (left.NodeType == ExpressionType.Constant)
+                {
+                    return left;
+                }
+                if (right.NodeType == ExpressionType.Constant)
+                {
+                    return right;
+                }
+            }
+            if (exp.NodeType == ExpressionType.Parameter)
+            {
+                return Expression.Constant(1d);
+            }
+            return null;
+        }
     }
 }
